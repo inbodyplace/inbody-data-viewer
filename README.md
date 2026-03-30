@@ -1,41 +1,41 @@
 # InBody Data Viewer
 
-InBody 기기에서 **웹훅**을 수신하면 **MySQL**에 저장하고, React 뷰어로 체성분 추이를 시각화하는 앱입니다.
+Receives **webhooks** from InBody devices, stores measurements in **MySQL**, and visualizes body composition trends in a React viewer.
 
 ```
-InBody 기기
+InBody Device
     │
     ▼  POST /webhook
-Express 서버
-    ├─ webhook_events 테이블에 저장
-    └─ 백그라운드: GetInBodyDataByID 호출 후 inbody_data 업데이트
+Express Server
+    ├─ Save to webhook_events table
+    └─ Background: call GetInBodyDataByID → update inbody_data
            │
            ▼
         MySQL
            │
            ▼  GET /api/members/:userId/history
        React Viewer
-    (이벤트 목록 자동 갱신 → 클릭 → 체성분 차트)
+    (auto-refresh event list → click row → body composition chart)
 ```
 
-## 기능
+## Features
 
-- **웹훅 수신** — InBody 기기 측정 완료 시 `POST /webhook`으로 이벤트 자동 수신
-- **자동 데이터 저장** — 웹훅 수신 즉시 응답 후 백그라운드에서 InBody API 호출, 측정 데이터를 MySQL에 저장
-- **이벤트 목록** — 수신된 웹훅 이벤트를 5초마다 자동 갱신하여 표시
-- **체성분 차트** — 이벤트 행 클릭 시 해당 멤버의 측정 이력 차트 표시
-- **대시보드 통계** — 오늘 측정 수, 전체 멤버 수, 이번주 측정 수 헤더에 표시
-- **Simulate Event** — 헤더의 ⚡ 버튼으로 테스트 웹훅 즉시 발송
+- **Webhook receiver** — automatically receives events via `POST /webhook` when a measurement is taken on an InBody device
+- **Auto data storage** — responds immediately on webhook receipt, then fetches InBody API data in the background and stores it in MySQL
+- **Event list** — displays received webhook events with auto-refresh every 5 seconds
+- **Body composition chart** — click any event row to view that member's measurement history chart
+- **Dashboard stats** — today's measurements, total members, and this week's count shown in the header
+- **Simulate Event** — send a test webhook instantly via the ⚡ button in the header
 
 ## Quick Start
 
-### 1. 환경 변수 설정
+### 1. Configure environment variables
 
 ```bash
 cp .env.example .env
 ```
 
-`.env` 파일을 열어 아래 항목을 입력합니다:
+Edit `.env` with your settings:
 
 ```env
 PORT=3001
@@ -50,74 +50,75 @@ DB_USER=root
 DB_PASSWORD=your_password
 DB_NAME=inbody_viewer
 
-# 웹훅 보안 헤더 (선택)
+# Webhook security header (optional)
 WEBHOOK_HEADER_NAME=X-InBody-Secret
 WEBHOOK_HEADER_VALUE=your_secret_value
 ```
 
-> DB는 처음 실행 시 `webhook_events` 테이블을 자동으로 생성합니다.
+> The `webhook_events` table is created automatically on first run.
 
-### 2. 패키지 설치
+### 2. Install dependencies
 
 ```bash
 npm install
 ```
 
-### 3. 실행
+### 3. Run
 
-**개발 모드** (터미널 두 개):
+**Development mode** (two terminals):
 
 ```bash
-# 백엔드 (Express + MySQL)
+# Backend (Express + MySQL)
 npm run dev:server
 
-# 프론트엔드 (Vite dev server)
+# Frontend (Vite dev server)
 npm run dev
 ```
 
-- 뷰어: http://localhost:5174
-- 웹훅 수신 주소: http://localhost:3001/webhook
+- Viewer: http://localhost:5174
+- Webhook endpoint: http://localhost:3001/webhook
 
-**프로덕션 빌드**:
+**Production build**:
 
 ```bash
-npm run build     # React 앱을 dist/ 로 빌드
-node server.js    # Express가 정적 파일까지 함께 서빙
+npm run build     # Build React app into dist/
+node server.js    # Express serves both API and static files
 ```
 
-## 화면 구성
+## UI Layout
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│ ⚖️ InBody Data Viewer   오늘:2  멤버:5  이번주:8   ⚡ Simulate  │
+│ ⚖️ InBody Data Viewer  Today:2  Members:5  This week:8  ⚡ Sim  │
 ├──────────────┬──────────────────────────────────────────────────┤
-│ 선택된 멤버  │ 수신된 웹훅 이벤트 (5초마다 자동 갱신)           │
-│ member001    │ ID │ User ID   │ 측정일시   │ Status             │
-│              │  3 │ member001 │ 2024-09-10 │ success ←클릭      │
-│ 지표 선택    │  2 │ testuser9-09 │ success            │
-│ ✓ Weight     ├──────────────────────────────────────────────────┤
-│ ✓ Skeletal   │ 체성분 추이 — member001                          │
-│ ✓ Body Fat   │  ╭──╮                                            │
-│              │  │  ╰──╮    ╭──╮                                │
-│ 최근 측정값  │  │     ╰────╯  ╰──                              │
-│ 72.3 kg      │  ──────────────────────                         │
+│ Selected     │ Webhook Events (auto-refresh every 5s)           │
+│ Member:      │ ID │ User ID   │ Test Date  │ Status             │
+│ member001    │  3 │ member001 │ 2024-09-10 │ success ← click   │
+│              │  2 │ testuser  │ 2024-09-09 │ success            │
+│ Metrics      ├──────────────────────────────────────────────────┤
+│ ✓ Weight     │ Body Composition Trend — member001               │
+│ ✓ Skeletal   │  ╭──╮                                            │
+│ ✓ Body Fat   │  │  ╰──╮    ╭──╮                                │
+│              │  │     ╰────╯  ╰──                              │
+│ Latest       │  ──────────────────────                         │
+│ Snapshot     │                                                  │
+│ 72.3 kg      │ Measurement History table                        │
 │ 30.1 kg      │                                                  │
-│              │ 측정 이력 테이블                                  │
-│ ← 목록으로   │                                                  │
+│ ← Back       │                                                  │
 └──────────────┴──────────────────────────────────────────────────┘
 ```
 
 ## API Endpoints
 
-| Method | Path                           | 설명                              |
-| ------ | ------------------------------ | --------------------------------- |
-| `POST` | `/webhook`                     | InBody 기기 웹훅 수신             |
-| `GET`  | `/api/stats`                   | 오늘/이번주 측정 수, 전체 멤버 수 |
-| `GET`  | `/api/events?limit=50`         | 최근 웹훅 이벤트 목록             |
-| `GET`  | `/api/members/:userId/history` | 특정 멤버 측정 이력 (DB)          |
-| `POST` | `/api/test-webhook`            | 테스트용 웹훅 이벤트 주입         |
+| Method | Path                           | Description                        |
+| ------ | ------------------------------ | ---------------------------------- |
+| `POST` | `/webhook`                     | Receive webhook from InBody device |
+| `GET`  | `/api/stats`                   | Today/week counts, total members   |
+| `GET`  | `/api/events?limit=50`         | Recent webhook event list          |
+| `GET`  | `/api/members/:userId/history` | Member measurement history (DB)    |
+| `POST` | `/api/test-webhook`            | Inject a test webhook event        |
 
-## DB 스키마
+## DB Schema
 
 ```sql
 CREATE TABLE webhook_events (
@@ -129,22 +130,22 @@ CREATE TABLE webhook_events (
   test_at      VARCHAR(14)  NOT NULL,   -- YYYYMMDDHHmmss
   account      VARCHAR(100),
   is_temp      TINYINT(1)   NOT NULL DEFAULT 0,
-  inbody_data  JSON,                    -- InBody API 응답
+  inbody_data  JSON,                    -- InBody API response
   fetch_status VARCHAR(30)  DEFAULT 'pending',
   fetch_error  TEXT,
   received_at  DATETIME     DEFAULT CURRENT_TIMESTAMP
 )
 ```
 
-`fetch_status` 값:
+`fetch_status` values:
 
-| 값                  | 의미                   |
-| ------------------- | ---------------------- |
-| `pending`           | API 조회 대기 중       |
-| `success`           | 데이터 저장 완료       |
-| `error`             | API 조회 실패          |
-| `skipped_temp`      | 임시 측정값이라 스킵   |
-| `skipped_no_config` | API 키 미설정으로 스킵 |
+| Value               | Meaning                                  |
+| ------------------- | ---------------------------------------- |
+| `pending`           | Waiting for API fetch                    |
+| `success`           | Data fetched and stored                  |
+| `error`             | API fetch failed                         |
+| `skipped_temp`      | Skipped — temporary measurement          |
+| `skipped_no_config` | Skipped — API credentials not configured |
 
 ## Metrics
 
