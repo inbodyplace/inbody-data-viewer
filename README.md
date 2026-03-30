@@ -1,6 +1,6 @@
 # InBody Data Viewer
 
-A browser-only React app that visualises body composition trends for any member using the [InBody Developers API](https://developers.inbody.com).
+A browser-only React app that visualises body composition trends for any member using the [InBody Developers API](https://kr.developers.inbody.com).
 No server required — API calls are made directly from the browser.
 
 ## What it does
@@ -74,21 +74,21 @@ npm run preview  # preview the production build locally
 
 ## Metrics
 
-| Key | Label | Unit |
-|-----|-------|------|
-| `WT` | Weight | kg |
-| `SMM` | Skeletal Muscle Mass | kg |
-| `BFM` | Body Fat Mass | kg |
-| `PBF` | Body Fat % | % |
-| `BMI` | BMI | — |
+| Key   | Label                | Unit |
+| ----- | -------------------- | ---- |
+| `WT`  | Weight               | kg   |
+| `SMM` | Skeletal Muscle Mass | kg   |
+| `BFM` | Body Fat Mass        | kg   |
+| `PBF` | Body Fat %           | %    |
+| `BMI` | BMI                  | —    |
 
 Toggle any metric on/off with the checkboxes in the sidebar.
 
 ## API Calls Used
 
-| Endpoint | Purpose |
-|----------|---------|
-| `POST /Inbody/GetDatetimesByID` | Get list of measurement timestamps for a user |
+| Endpoint                         | Purpose                                         |
+| -------------------------------- | ----------------------------------------------- |
+| `POST /Inbody/GetDatetimesByID`  | Get list of measurement timestamps for a user   |
 | `POST /Inbody/GetInBodyDataByID` | Fetch body composition data for one measurement |
 
 Both calls are made to `https://apikr.lookinbody.com` with `Account` and `API-KEY` headers.
